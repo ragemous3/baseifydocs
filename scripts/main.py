@@ -7,19 +7,25 @@ test: str = "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta"
 
 content: Optional[str] = None
 
-rm_elements = set(["meta", "link", "script", "style"])
+rm_elements = set(["meta", "link", "script", "style", "footer", "nav", "svg", "aside", "button"])
+
+#add keep attribute
+keep_attributes = set(["href", "src"])
 
 def main(url: str = test):
 	with urlopen(url) as webpage:
 		content = webpage.read().decode()
 		
 		out(clean(content))
+		return 1
 
 def clean(html):
 	soup = BeautifulSoup(html, "html.parser")
 	item: ResultSet[Any]
 	for item in soup.findAll(True):
-		#item.attrs = {}
+     
+		#remove all htlm attr
+		item.attrs = {}
   
 		if item.name in rm_elements:
 			item.decompose()
@@ -30,15 +36,17 @@ def clean(html):
 			item.decompose()
 			continue
 		
-		if len(list(item.contents)) == 0:
+		if len(list(item.children)) == 0:
 			item.decompose()
+			continue
 
+		if not item.get_text():
+			item.decompose()
+			continue
   		# If the element is div, if the elemet has 1 child and if the that element is a div, remove it.
 		if item.name == "div" and len(list(item.contents)) == 1 and list(item.contents)[0].name == "div":
-			decoded_contents = item.decode_contents()
-
-			#need to convert back to unicode, include standard set and extra to add ability to remove whatever
-			item.insert_after(str(decoded_contents))
+			for kid in item.children:
+				item.insert_after(kid)
 			item.decompose()
 			continue
    
@@ -53,3 +61,4 @@ if __name__ == "__main__":
 	parser.add_argument("url")
 	args = parser.parse_args()
 	main(args.url)
+
