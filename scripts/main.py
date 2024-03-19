@@ -16,47 +16,48 @@ def main(url: str = test):
 	with urlopen(url) as webpage:
 		content = webpage.read().decode()
 
-		for i in range(0, 3):
-			content = clean(content)
-
+		content = clean(content, True)
+		
 		out(content)
 		return 1
 
-#Not recursive, content will have empty divs etc after this is done. No good.
-
-def clean(html):
+def clean(html: str, is_running: bool):
 	soup = BeautifulSoup(html, "html.parser")
-	item: ResultSet[Any]
-	for item in soup.findAll(True):
-     
-		#remove all htlm attr
-		item.attrs = {}
+	is_running = False
+ 
+	for item in soup.find_all(True):
+		
+		#remove all htlm attr except the ones specified
+		if item.attrs:
+			item.attrs = {attr: value for attr, value in item.attrs.items() if attr in keep_attributes}
   
 		if item.name in rm_elements:
+			is_running = True
 			item.decompose()
 			continue
 
-		# Bug, it removes too much
-		if not item.findAll(True):
-			item.decompose()
-			continue
-
-		if not item.get_text():
+		# Bug, strip=True trim whitespaces, 
+		if not item.get_text(strip=True):
+			is_running = True
 			item.decompose()
 			continue
 
   		# If the element is div, if the elemet has 1 child and if the that element is a div, remove it.
-		if item.name == "div" and len(list(item.contents)) == 1 and list(item.contents)[0].name == "div":
+		if item.name == item.parent.name and len(list(item.contents)) == 1:
 			for kid in item.children:
 				item.insert_after(kid)
 			item.decompose()
+			is_running = True
 			continue
+	
+	if is_running:
+		clean(str(soup), is_running)
    
 	return soup.prettify()
 
 def out(soup):
 	with open("output/out.html", "w") as o:
-		o.write(soup)
+		o.write(str(soup))
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(prog="baseifydocs", description="Used for taking snippets of docs and downloading it")
