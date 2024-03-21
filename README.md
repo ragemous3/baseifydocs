@@ -1,6 +1,7 @@
 # Baseify docs beta
 
-Scraper to pick any documentation and scrape the clutter from it and output clean html. 
+Scrapes content layer of documentation pages and cleans it. 
+Uses openai to make documentation text more readable.
 
 
 ## Deps

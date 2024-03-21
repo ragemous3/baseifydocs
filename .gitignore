@@ -1,2 +1,4 @@
 .vscode
 scripts/output/**
+.env
+scripts/__pycache__
