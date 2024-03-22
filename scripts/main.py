@@ -2,12 +2,13 @@ import argparse
 import env
 from urllib.request import urlopen
 from typing import Optional, Any
-from bs4 import BeautifulSoup, ResultSet
+from bs4 import BeautifulSoup, ResultSet, Tag
 from fix_text_ai import *
 
 content: Optional[str] = None
 
 rm_elements = set(["meta", "link", "script", "style", "footer", "nav", "svg", "aside", "button"])
+ignore_elements = set(["hr"])
 
 #add keep attribute
 keep_attributes = set(["", ""])
@@ -19,14 +20,15 @@ def main(url: str):
 		#Figure out how to only get relevan strings. 
   
 		content = clean(content)
-		# clean_text(content)
+		clean_text(content)
 		out(content.prettify(), "out.html")
 		return 1
 
 def clean_text(soup: BeautifulSoup):
-    
-    for item in soup.find_all(True):
-        print("made print")
+    #You can use techniques like recursive character-based chunking to efficiently handle large amounts of text.
+    #add each response to a assistant array, the responses are dicts. 
+    for item in soup.find_all():
+        print("gets all text")
         print(item.get_text())
     
 
@@ -52,10 +54,8 @@ def clean(html: str, is_running: bool = False):
 			continue
 		
 		#Erases unecessary stacked containers
-		if item.name == item.parent.name and len(list(item.contents)) == 1:
-			for kid in item.children:
-				item.insert_after(kid)
-			item.decompose()
+		if item and item.parent and isinstance(item, Tag) and item.name == item.parent.name and len(list(item.contents)) == 1:
+			item.unwrap()
 			is_running = True
 			continue
    
