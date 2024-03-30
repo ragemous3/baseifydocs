@@ -3,6 +3,7 @@ import os
 
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
+# https://community.openai.com/t/gpt-3-5-turbo-how-to-remember-previous-messages-like-chat-gpt-website/170370/6
 def make_better(html: str):
   completion = client.chat.completions.create(
   model="gpt-3.5-turbo-0125",
