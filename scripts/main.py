@@ -3,7 +3,8 @@ import env
 from urllib.request import urlopen
 from typing import Optional, Any
 from bs4 import BeautifulSoup, ResultSet, Tag
-from fix_text_ai import *
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+#from fix_text_ai import *
 
 content: Optional[str] = None
 
@@ -11,7 +12,7 @@ rm_elements = set(["meta", "link", "script", "style", "footer", "nav", "svg", "a
 ignore_elements = set(["hr"])
 
 #add keep attribute
-keep_attributes = set(["", ""])
+keep_attributes = set(["src", "href", "data"])
 
 def main(url: str):
 	with urlopen(url) as webpage:
@@ -25,12 +26,19 @@ def main(url: str):
 		return 1
 
 def clean_text(soup: BeautifulSoup):
-    #You can use techniques like recursive character-based chunking to efficiently handle large amounts of text.
-    #add each response to a assistant array, the responses are dicts. 
-    for item in soup.find_all():
-        print("gets all text")
-        print(item.get_text())
-    
+	#You can use techniques like recursive character-based chunking to efficiently handle large amounts of text.
+	#add each response to a assistant array, the responses are dicts. 
+	text_splitter = RecursiveCharacterTextSplitter(
+	chunk_size=1000,
+    chunk_overlap=50,
+    length_function=len,
+    is_separator_regex=False)
+	all_splits = text_splitter.create_documents([str(soup)])
+
+	# Now you have smaller chunks to work with
+	for chunk in all_splits:
+		print(chunk)
+	
 
 def clean(html: str, is_running: bool = False):
 	soup = BeautifulSoup(html, "html.parser") 
