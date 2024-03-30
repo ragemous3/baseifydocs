@@ -7,7 +7,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 #from fix_text_ai import *
 
 content: Optional[str] = None
-
+# https://docs.docker.com/guides/walkthroughs/what-is-a-container/
 rm_elements = set(["meta", "link", "script", "style", "footer", "nav", "svg", "aside", "button"])
 ignore_elements = set(["hr"])
 
@@ -35,7 +35,6 @@ def clean_text(soup: BeautifulSoup):
     is_separator_regex=False)
 	all_splits = text_splitter.create_documents([str(soup)])
 
-	# Now you have smaller chunks to work with
 	for chunk in all_splits:
 		print(chunk)
 	
