@@ -6,12 +6,9 @@ from bs4 import BeautifulSoup, ResultSet, Tag
 import nltk
 from fix_text_ai import *
 
-#from fix_text_ai import *
-nltk.download('punkt')
 content: Optional[str] = None
-# https://docs.docker.com/guides/walkthroughs/what-is-a-container/
-rm_elements = set(["meta", "link", "script", "style", "footer", "nav", "svg", "aside", "button"])
-ignore_elements = set(["hr", "img", "image", "picture", "figcaption"])
+rm_elements = set(["meta", "link", "script", "style", "footer", "nav", "aside"])
+ignore_elements = set(["hr", "img", "image", "picture", "figcaption", "svg", "button"])
 
 
 #add keep attribute
@@ -20,9 +17,10 @@ keep_attributes = set(["src", "href", "data"])
 def main(url: str):
 	with urlopen(url) as webpage:
 		content = webpage.read().decode()
-		content = clean(content)
+		content = str(clean(content).prettify())
 		aifixed = ai_fix(str(content))
-		out(aifixed, "out.html")
+		out(content, "raw.html")
+		out(aifixed, "index.html")
 		return 1
 
 def ai_fix(text, chunk_size=1000):
@@ -42,9 +40,8 @@ def ai_fix(text, chunk_size=1000):
 	
 	ai_fixed: str = ""
 	for i, chunk in enumerate(chunks):
-		print(f"CHUNK {i + 1}", chunk, "/n")
-		#ai_fixed += make_better(chunk)
-	return text
+		ai_fixed += make_better(chunk)
+	return ai_fixed
 	
 
 def clean(html: str, is_running: bool = False):
@@ -63,7 +60,7 @@ def clean(html: str, is_running: bool = False):
 			continue
 
 		#Remove elements with no text content
-		if not item.get_text(strip=True):
+		if item.name not in ignore_elements and not item.get_text(strip=True):
 			is_running = True
 			item.decompose()
 			continue
