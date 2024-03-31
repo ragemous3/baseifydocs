@@ -3,13 +3,16 @@ import env
 from urllib.request import urlopen
 from typing import Optional, Any
 from bs4 import BeautifulSoup, ResultSet, Tag
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-#from fix_text_ai import *
+import nltk
+from fix_text_ai import *
 
+#from fix_text_ai import *
+nltk.download('punkt')
 content: Optional[str] = None
 # https://docs.docker.com/guides/walkthroughs/what-is-a-container/
 rm_elements = set(["meta", "link", "script", "style", "footer", "nav", "svg", "aside", "button"])
-ignore_elements = set(["hr"])
+ignore_elements = set(["hr", "img", "image", "picture", "figcaption"])
+
 
 #add keep attribute
 keep_attributes = set(["src", "href", "data"])
@@ -17,26 +20,31 @@ keep_attributes = set(["src", "href", "data"])
 def main(url: str):
 	with urlopen(url) as webpage:
 		content = webpage.read().decode()
-  		#use ai outside of the context  . After the cleaninzzg has been done. Instruct to be non-recursive. 
-		#Figure out how to only get relevan strings. 
-  
 		content = clean(content)
-		clean_text(content)
-		out(content.prettify(), "out.html")
+		aifixed = ai_fix(str(content))
+		out(aifixed, "out.html")
 		return 1
 
-def clean_text(soup: BeautifulSoup):
-	#You can use techniques like recursive character-based chunking to efficiently handle large amounts of text.
-	#add each response to a assistant array, the responses are dicts. 
-	text_splitter = RecursiveCharacterTextSplitter(
-	chunk_size=1000,
-    chunk_overlap=50,
-    length_function=len,
-    is_separator_regex=False)
-	all_splits = text_splitter.create_documents([str(soup)])
-
-	for chunk in all_splits:
-		print(chunk)
+def ai_fix(text, chunk_size=1000):
+	sentences = nltk.sent_tokenize(text)
+	chunks = []
+	current_chunk = ""
+	
+	for sentence in sentences:
+		if len(current_chunk) + len(sentence) <= chunk_size:
+			current_chunk += sentence
+		else:
+			chunks.append(current_chunk)
+			current_chunk = sentence
+	
+	if current_chunk:
+		chunks.append(current_chunk)
+	
+	ai_fixed: str = ""
+	for i, chunk in enumerate(chunks):
+		print(f"CHUNK {i + 1}", chunk, "/n")
+		#ai_fixed += make_better(chunk)
+	return text
 	
 
 def clean(html: str, is_running: bool = False):
