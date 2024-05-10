@@ -8,7 +8,7 @@ from fix_text_ai import *
 
 content: Optional[str] = None
 rm_elements = set(["meta", "link", "script", "style", "footer", "nav", "aside"])
-ignore_elements = set(["hr", "img", "image", "picture", "figcaption", "svg", "button"])
+ignore_elements = set(["hr", "img", "image", "picture", "figcaption", "svg"])
 
 
 #add keep attribute
@@ -17,10 +17,11 @@ keep_attributes = set(["src", "href", "data"])
 def main(url: str):
 	with urlopen(url) as webpage:
 		content = webpage.read().decode()
-		content = str(clean(content).prettify())
-		aifixed = ai_fix(str(content))
+		cleaned = str(clean_once(content).prettify())
+		aifixed = ai_fix(str(cleaned))
 		out(content, "raw.html")
-		out(aifixed, "index.html")
+		out(cleaned, "index.html")
+		out(aifixed, "aifixed.html")
 		return 1
 
 def ai_fix(text, chunk_size=1000):
@@ -44,7 +45,7 @@ def ai_fix(text, chunk_size=1000):
 	return ai_fixed
 	
 
-def clean(html: str, is_running: bool = False):
+def clean_once(html: str):
 	soup = BeautifulSoup(html, "html.parser") 
  
 	for item in soup.find_all(True):
@@ -55,23 +56,27 @@ def clean(html: str, is_running: bool = False):
 	
 		#removes specified elements
 		if item.name in rm_elements:
-			is_running = True
-			item.decompose()
-			continue
-
-		#Remove elements with no text content
-		if item.name not in ignore_elements and not item.get_text(strip=True):
-			is_running = True
 			item.decompose()
 			continue
 		
-		#Erases unecessary stacked containers
-		if item and item.parent and isinstance(item, Tag) and item.name == item.parent.name and len(list(item.contents)) == 1:
+	return unwrap(str(soup))
+
+
+def unwrap(html: str):
+	soup = BeautifulSoup(html, "html.parser")
+	is_running = False
+	for item in soup.find_all(strings=False):
+		#Remove elements with no text content
+		if item.name not in ignore_elements and not item.get_text(strip=True):
+			item.decompose()
+			continue
+
+		if item.name not in ignore_elements and item.parent and item.parent.name == item.name and len(list(item.parent.children)) <= 1:
 			item.unwrap()
 			is_running = True
-			continue
-   
-	return soup if not is_running else clean(str(soup))
+
+	return soup if not is_running else unwrap(str(soup))
+
 
 def out(soup, name):
 	with open("output/" + name, "w") as o:

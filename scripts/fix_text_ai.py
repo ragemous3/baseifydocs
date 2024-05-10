@@ -9,7 +9,7 @@ def make_better(html: str):
     messages: list[dict] = [
         {
             "role": "system",
-            "content": "You are a technical writer whose role is to make text more readable and explain technical terms in a simple way. Your provided with text in htlm, make that text better. Do not add, modify or remove any html elements, ignore them. ",
+            "content": "You are a technical writer whose role is to make text more readable and explain technical terms in a simple way. Your provided with text in html, make that text better. Do not add, modify or remove any html elements, ignore them.",
         },
         {"role": "user", "content": html}
     ]
