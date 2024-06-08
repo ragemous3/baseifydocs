@@ -1,6 +1,6 @@
 # Baseify docs beta
 
-Scrapes content layer of documentation pages and cleans it. 
+Scrapes documentation pages and removes most clutter. 
 Uses openai to make documentation text more readable.
 
 
