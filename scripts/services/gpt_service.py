@@ -3,15 +3,19 @@ import json
 from typing import Generator
 
 from openai import OpenAI
+from tqdm import tqdm
 from models.gpt_prompts import *
 import nltk
 from data.gpt import GPT
 
 # Make startpoint
-def main_endpoint(html: str, memory=False):
+def gpt_service(html: str, model: str, memory=False, whole_at_once=True):
 	if memory:
-		return send_memorised(chunk_generator(html))
+		return send_memorized(chunk_generator(html))
+	elif whole_at_once:
+		return GPT([*get_messages("whole"), {"role": "user", "content": html}], model).choices[0].message.content
 	else:
+		# When context not important
 		return send_chunks(chunk_generator(html))
 		
 def chunk_generator(text, chunk_size=500) -> Generator[str, None, None]:
@@ -19,7 +23,7 @@ def chunk_generator(text, chunk_size=500) -> Generator[str, None, None]:
 	current_tokens = 0
 	current_batch = []
 
-	for sentence in sentences:
+	for sentence in tqdm(sentences, desc="Preparing text..."):
 		# Tokenize the sentence into words
 		word_tokens = nltk.word_tokenize(sentence)
 		sentence_length = len(word_tokens)
@@ -64,22 +68,26 @@ def input_chunks(chunk_gen: Generator[str, None, None], messages: list[dict]) ->
 			completion = GPT(messages)
 			messages.append(completion.choices[0].message)
 	except StopIteration:
-		print("Generator exhausted. No more values to yield.")
 		return messages, chunk_count
 
 def output_chunks(messages: list[dict], chunk_count: int):
 	document = ''
  
-	for chunk_num in range(chunk_count):
+	for chunk_num in tqdm(range(chunk_count), desc="Requesting chunks..."):
 		messages = [*messages, {"role": "user", "content": f'chunk {chunk_num + 1}'}]
 		text = GPT(messages)
 		messages.append(text.choices[0].message)
-		document += text.choices[0].message.content
+
+		if not text.choices[0].message.content == GPT_EOF:
+			document += text.choices[0].message.content
+		else:
+			print(GPT_EOF)
+			break
 	
 	return document, messages
 
 
-def send_memorised(chunk_gen):
+def send_memorized(chunk_gen):
 	messages, chunk_count = input_chunks(chunk_gen, get_messages("memory"))
 	document, logs = output_chunks(messages, chunk_count)
 	

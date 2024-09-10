@@ -8,7 +8,7 @@ from modules.html_parser import clean
 
 content: Optional[str] = None
 
-def main(url: str, clean_html: bool, memorize: bool) -> int:
+def main(url: str, clean_html: bool, memorize: bool, model: str = "gpt-3.5-turbo") -> int:
 	with urlopen(url) as webpage:
 		content = webpage.read().decode()
 		result = content
@@ -16,7 +16,7 @@ def main(url: str, clean_html: bool, memorize: bool) -> int:
 		if clean_html:
 			result = clean(content)
 
-		aifixed = main_endpoint(str(result), memorize)
+		aifixed = gpt_service(str(result), model, memorize)
 		out(result, "raw.html")
 		out(result, "index.html")
 		out(aifixed, "aifixed.html")
@@ -31,8 +31,9 @@ if __name__ == "__main__":
  
 	parser.add_argument("--clean_html", type=bool, default=True, help="Cleans the html. Default is true.")
 	parser.add_argument("--url", type=str, help="URL of the webpage you want to process")
+	parser.add_argument("--model", type=str, default="gpt-4o")
 	parser.add_argument("--memorize", type=bool, help="Make gpt memorize")
  
 	args = parser.parse_args()
  
-	main(args.url, args.clean_html, args.memorize)
+	main(args.url, args.clean_html, args.memorize, args.model)
