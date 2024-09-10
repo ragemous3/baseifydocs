@@ -1,14 +1,13 @@
 import argparse
 from typing import Optional
 from urllib.request import urlopen
-
 import env
 from services.gpt_service import *
 from modules.html_parser import clean
 
 content: Optional[str] = None
 
-def main(url: str, clean_html: bool, memorize: bool, model: str = "gpt-3.5-turbo") -> int:
+def main(url: str, clean_html: bool, memorize: bool, model: str) -> int:
 	with urlopen(url) as webpage:
 		content = webpage.read().decode()
 		result = content
@@ -26,6 +25,8 @@ def out(soup, name):
 	with open("output/" + name, "w") as o:
 		o.write(str(soup))
 
+
+# python3 main.py --url=https://docs.docker.com/guides/walkthroughs/what-is-a-container/ --clean_html=true
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(prog="baseifydocs", description="Used for taking snippets of docs and downloading it")
  
