@@ -23,8 +23,7 @@ sysPromptMemoryWhole: dict[str] = {
 				2. Fix or reformat the text content inside the tags without modifying the HTML structure. \
 				3. Concatinate the fixed chunks and return them in whole. \
 				The HTML will be sent to you in parts. Please wait until I send the last part before returning the complete fixed HTML. I will indicate the final part with the message: 'END OF HTML'. \
-				For each chunk, just acknowledge that you’ve received it and are holding it for processing.
-. {errorHandling}"
+				For each chunk, just acknowledge that you’ve received it and are holding it for processing. {errorHandling}"
 }	
 
 sysPromptWhole: dict[str] = {
@@ -33,11 +32,18 @@ sysPromptWhole: dict[str] = {
 				Improve the given html document your given. Remove text if unecessary \
  				NOTE: Return all the html as you got it except if told otherwise. Do not return any content wrapped in markdown. \
  	 {errorHandling}"
-}	
+}
+
+sysPromptDefaultStyle: dict[str] = {
+	"role": "system",
+	"content": f"Create a stylesheet for a webpage. Return only the html stylesheet tag with the style in it. "
+}
 
 def get_messages(prompt_type: str) -> list[dict]:
 	if prompt_type == "memory":
 		return [sysPromptMemory]
+	if prompt_type == "memoryWhole":
+		return [sysPromptMemoryWhole]
 	if prompt_type == "whole":
 		return [sysPromptWhole]
 	return [sysPrompt]

@@ -2,12 +2,13 @@ import argparse
 from typing import Optional
 from urllib.request import urlopen
 import env
+from scripts.services.gpt_style import document_style
 from services.gpt_service import *
-from modules.html_parser import clean
+from modules.html_parser import add_style_sheet, clean
 
 content: Optional[str] = None
 
-def main(url: str, clean_html: bool, memorize: bool, model: str) -> int:
+def main(url: str, clean_html: bool, memorize: bool, model: str, style: bool) -> int:
 	with urlopen(url) as webpage:
 		content = webpage.read().decode()
 		result = content
@@ -16,6 +17,12 @@ def main(url: str, clean_html: bool, memorize: bool, model: str) -> int:
 			result = clean(content)
 
 		aifixed = gpt_service(str(result), model, memorize)
+
+		if style:
+			style_tag = document_style()
+			aifixed = add_style_sheet(aifixed, style_tag)
+			
+  
 		out(result, "raw.html")
 		out(result, "index.html")
 		out(aifixed, "aifixed.html")
@@ -34,6 +41,8 @@ if __name__ == "__main__":
 	parser.add_argument("--url", type=str, help="URL of the webpage you want to process")
 	parser.add_argument("--model", type=str, default="gpt-4o")
 	parser.add_argument("--memorize", type=bool, help="Make gpt memorize")
+	parser.add_argument("--style", type=bool, help="Style the html")
+
  
 	args = parser.parse_args()
  
